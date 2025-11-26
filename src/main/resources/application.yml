@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/zeroone
+    url: jdbc:postgresql://localhost:5433/zeroone
     username: zero
-    password: "finite"
+    password: finite
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
@@ -20,6 +20,7 @@ spring:
   sql:
     init:
       mode: always
+
   messages:
     basename: error
     encoding: UTF-8

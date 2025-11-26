@@ -47,3 +47,10 @@ interface UserRepository : BaseRepository<User>{
     fun existsByUsername(username: String): Boolean
 
 }
+//User repo
+
+//Transaction repo
+@Repository
+interface TransactionRepository : BaseRepository<Transaction>{
+
+}

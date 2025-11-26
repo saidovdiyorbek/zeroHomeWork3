@@ -28,3 +28,18 @@ data class UpdateUserRequest(
     val username: String? = null,
     val balance: BigDecimal? = null,
 )
+
+data class TransactionRequest(
+    @Schema(description = "User id of the transaction", example = "1")
+    val userId: Long,
+    @Schema(description = "Total amount", example = "0.000")
+    val totalAmount: BigDecimal,
+)
+
+data class TransactionResponse(
+    val id: Long,
+    val userId: Long,
+    val totalAmount: BigDecimal,
+    val createdDate: Date,
+    val createdBy: String,
+)

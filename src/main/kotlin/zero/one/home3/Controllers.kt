@@ -47,3 +47,18 @@ class UserController(
     fun update(@PathVariable id: Long, @RequestBody updateBody: UpdateUserRequest): BaseMessage =
         userService.update(id, updateBody)
 }
+
+@RestController
+@RequestMapping("/api/transactions")
+class TransactionController(
+    private val transactionService: TransactionService
+){
+
+    @Operation(summary = "Transaction create")
+    @PostMapping
+    fun create(@RequestBody transactionRequest: TransactionRequest): Any = transactionService.create(transactionRequest)
+
+    @Operation(summary = "Get one transaction bu id")
+    @GetMapping("/{id}")
+    fun getOne(@PathVariable id: Long): TransactionResponse = transactionService.getOne(id)
+}

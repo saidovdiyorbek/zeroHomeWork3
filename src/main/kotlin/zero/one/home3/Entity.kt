@@ -3,9 +3,12 @@ package zero.one.home3
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.Table
 import jakarta.persistence.Temporal
@@ -55,9 +58,14 @@ class User(
 
 @Entity
 class Transaction(
+    @Column(name = "user_id", insertable = false, updatable = false)
     var userId: Long,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
+
     var totalAmount: BigDecimal,
-    var date: Date,
 ) : BaseEntity()
 
 @Entity

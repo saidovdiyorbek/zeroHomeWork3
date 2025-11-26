@@ -1,6 +1,8 @@
 package zero.one.home3
 
+import getOrThrowNotFound
 import org.springframework.stereotype.Service
+import java.util.Date
 
 //Category service
 interface CategoryService{
@@ -66,10 +68,41 @@ class UserServiceImpl(
         val findById = userRepository.findById(id)
         if (findById.isPresent){
             val getUser = findById.get()
-            getUser.fullname = updateBody.fullname
-
+            getUser.fullname = updateBody.fullname.toString()
+            getUser.username = updateBody.username.toString()
+            userRepository.save(getUser)
+            return BaseMessage(200, "User updated")
         }
+        throw UserNotFoundException()
     }
 
 }
 //USer service
+
+//Transaction Service
+interface TransactionService{
+    fun create(transactionRequest: TransactionRequest): Any
+    fun getOne(id: Long): TransactionResponse
+}
+
+@Service
+class TransactionServiceImpl(
+    private val userRepository: UserRepository,
+    private val transactionRepository: TransactionRepository
+) : TransactionService {
+    override fun create(transactionRequest: TransactionRequest): BaseMessage {
+        val findById = userRepository.findById(transactionRequest.userId)
+        if (findById.isPresent){
+            val user = findById.get()
+            transactionRepository.save(Transaction(transactionRequest.userId, user, transactionRequest.totalAmount,))
+            return BaseMessage(200, "Transaction saved")
+        }
+        throw UserNotFoundException()
+    }
+
+    override fun getOne(id: Long): TransactionResponse {
+        val findById = transactionRepository.findById(id).getOrThrowNotFound("Transaction", id)
+
+    }
+}
+//Transaction Service
