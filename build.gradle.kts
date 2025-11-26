@@ -7,6 +7,12 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperclass")
+}
+
 group = "zero.one"
 version = "0.0.1-SNAPSHOT"
 description = "home3"

@@ -3,6 +3,7 @@ package zero.one.home3
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.tomcat.util.descriptor.LocalResolver
+import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.support.ResourceBundleMessageSource
@@ -22,13 +23,12 @@ class WebMvcConfig : WebMvcConfigurer {
     }
 
     @Bean
-    fun messageSource(): ResourceBundleMessageSource {
-        return ResourceBundleMessageSource().apply {
-            setBasename("messages")
-            setDefaultEncoding("UTF-8")
-            setFallbackToSystemLocale(false)
-
-        }
+    fun messageSource(): MessageSource{
+        val source = ResourceBundleMessageSource()
+        source.setBasename("messages")
+        source.setDefaultEncoding("UTF-8")
+        source.setFallbackToSystemLocale(false)
+        return source
     }
 
     override fun addInterceptors(registry: InterceptorRegistry) {

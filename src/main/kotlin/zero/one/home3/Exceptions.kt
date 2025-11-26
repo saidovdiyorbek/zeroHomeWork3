@@ -1,34 +1,38 @@
 package zero.one.home3
 
+import org.springframework.context.MessageSource
+import org.springframework.context.NoSuchMessageException
 import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.context.support.ResourceBundleMessageSource
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.util.Locale
 
-@ControllerAdvice
+@RestControllerAdvice
 class ExceptionHandler(
-    private val errorMessageSource: ResourceBundleMessageSource,
-){
-    @ExceptionHandler(Throwable::class)
-    fun handleOtherExceptions(ex: Throwable): ResponseEntity<Any> {
-        when(ex){
-            is ShopAppException -> {
-                return ResponseEntity
-                    .badRequest()
-                    .body(ex.getErrorMessage(errorMessageSource))
-            }
+    private val messageSource: MessageSource
+) {
 
-            else -> {
-                ex.printStackTrace()
-                return ResponseEntity
-                    .badRequest().body(
-                        BaseMessage(100,
-                            "Iltimos support bilan bog'laning")
-                    )
-            }
+    @ExceptionHandler(ShopAppException::class)
+    fun handleShopException(ex: ShopAppException): ResponseEntity<BaseMessage> {
+        val locale = LocaleContextHolder.getLocale()
+        val message = try {
+            messageSource.getMessage(ex.errorType().toString(), null, locale)
+        } catch (e: NoSuchMessageException) {
+            ex.errorType().toString().replace("_", " ").lowercase()
         }
+
+        return ResponseEntity
+            .badRequest()
+            .body(BaseMessage(ex.errorType().code, message))
+    }
+
+    @ExceptionHandler(Exception::class)
+    fun handleAll(e: Exception): ResponseEntity<Any> {
+        e.printStackTrace()
+        return ResponseEntity.status(500)
+            .body(mapOf("error" to "Server xatosi"))
     }
 }
 
@@ -39,7 +43,7 @@ sealed class ShopAppException(message: String? = null) : RuntimeException(messag
         return BaseMessage(
             errorType().code,
             errorMessageSource.getMessage(
-                errorType().code.toString(),
+                errorType().toString(),
                 getErrorMessageArguments() as Array<out Any>?,
                 Locale(LocaleContextHolder.getLocale().language)
             )
