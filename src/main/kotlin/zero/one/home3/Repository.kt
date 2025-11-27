@@ -2,15 +2,20 @@ package zero.one.home3
 
 
 import jakarta.persistence.EntityManager
+import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.data.jpa.repository.support.JpaEntityInformation
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.util.Optional
 
 @NoRepositoryBean
 interface BaseRepository<T : BaseEntity> : JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
@@ -19,6 +24,7 @@ interface BaseRepository<T : BaseEntity> : JpaRepository<T, Long>, JpaSpecificat
     fun trashList(ids: List<Long>): List<T?>
     fun findAllNotDeleted(): List<T>
     fun findAllNotDeleted(pageable: Pageable): Page<T>
+
 }
 
 class BaseRepositoryImpl<T : BaseEntity>(
@@ -26,8 +32,10 @@ class BaseRepositoryImpl<T : BaseEntity>(
 ): SimpleJpaRepository<T, Long>(entiInformation, entityManager), BaseRepository<T> {
     override fun findByIdAndDeletedFalse(id: Long): T? = findByIdOrNull(id)?.run { if (deleted) null else this }
 
-    override fun trash(id: Long): T? {
-        TODO("Not yet implemented")
+    @Transactional
+    override fun trash(id: Long): T? = findByIdOrNull(id)?.run{
+        deleted = true
+        save(this)
     }
 
     override fun trashList(ids: List<Long>): List<T?> {
@@ -46,11 +54,50 @@ class BaseRepositoryImpl<T : BaseEntity>(
 interface UserRepository : BaseRepository<User>{
     fun existsByUsername(username: String): Boolean
 
+    @Modifying
+    @Transactional
+    @Query("update User u set u.balance = u.balance - ?2" +
+            " where u.balance >= ?2 and u.id = ?1")
+    fun deductBalance(userId: Long?, amount: BigDecimal)
+
+    @Query("select u from User u where u.id = ?1 and u.balance >= ?2")
+    fun checkBalance(userId: Long?, amount: BigDecimal): User?
 }
 //User repo
 
 //Transaction repo
 @Repository
 interface TransactionRepository : BaseRepository<Transaction>{
+
+}
+
+@Repository
+interface ProductRepository : BaseRepository<Product>{
+
+    @Modifying
+    @Transactional
+    @Query("update Product p set p.count = p.count - ?2 where p.id = ?1 and p.count >= ?2")
+    fun deductCount(productId: Long?, count: Long)
+}
+
+@Repository
+interface CategoryRepository : BaseRepository<Category>{
+    fun findByName(name: String): Category?
+
+    @Modifying
+    @Transactional
+    @Query("update Category c set c.order = c.order + 1  where c.order >= ?1")
+    fun shiftOrderUp(order: Long)
+
+
+}
+
+@Repository
+interface TransactionItemRepository : BaseRepository<TransactionItem>{
+
+}
+
+@Repository
+interface UserPaymentTransactionRepository : BaseRepository<UserPaymentTransaction>{
 
 }

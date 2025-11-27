@@ -3,8 +3,8 @@ import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException 
 import zero.one.home3.UserNotFoundException
 
 
-fun <T> Optional<T>.getOrThrowNotFound(entityName: String, id: Long): T {
+fun <T> Optional<T>.getOrThrowNotFound(myThrow: Throwable): T {
     return this.orElseThrow {
-        UserNotFoundException()
+        myThrow
     }
 }

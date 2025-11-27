@@ -32,8 +32,15 @@ data class UpdateUserRequest(
 data class TransactionRequest(
     @Schema(description = "User id of the transaction", example = "1")
     val userId: Long,
-    @Schema(description = "Total amount", example = "0.000")
-    val totalAmount: BigDecimal,
+    @Schema(description = "Total items")
+    val items: List<TransactionItemRequest>,
+)
+
+data class TransactionItemRequest(
+    @Schema(description = "Product id", example = "1")
+    val productId: Long,
+    @Schema(description = "Item count", example = "5")
+    val count: Long,
 )
 
 data class TransactionResponse(
@@ -43,3 +50,17 @@ data class TransactionResponse(
     val createdDate: Date,
     val createdBy: String,
 )
+
+data class ProductCreateRequest(
+    val name: String,
+    val count: Long,
+    val categoryId: Long,
+    val prince: BigDecimal
+)
+
+data class CategoryCreateRequest(
+    val name: String,
+    val order: Long,
+    val description: String,
+)
+

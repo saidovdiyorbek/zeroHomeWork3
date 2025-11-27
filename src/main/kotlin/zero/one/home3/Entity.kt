@@ -41,10 +41,13 @@ class Category(
 ) : BaseEntity()
 
 @Entity
-class Product(
+class   Product(
     var name: String,
     var count: Long,
-    var categoryId: Long,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    var category: Category?,
+    var price: BigDecimal,
 ) : BaseEntity()
 
 @Entity
@@ -58,8 +61,6 @@ class User(
 
 @Entity
 class Transaction(
-    @Column(name = "user_id", insertable = false, updatable = false)
-    var userId: Long,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -70,15 +71,22 @@ class Transaction(
 
 @Entity
 class TransactionItem(
-    var productId: Long,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    var product: Product,
     var count: Long,
     var amount: BigDecimal,
     var totalAmount: BigDecimal,
-    var transactionId: Long,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false)
+    var transaction: Transaction,
 ) : BaseEntity()
 
+@Entity
 class UserPaymentTransaction(
-    var userId: Long,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: User,
     var amount: BigDecimal,
-    var date: Date,
-)
+) : BaseEntity()

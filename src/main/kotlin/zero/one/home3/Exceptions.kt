@@ -58,3 +58,17 @@ class UserNotFoundException() : ShopAppException(){
 class UserAlreadyExistsException() : ShopAppException(){
     override fun errorType() = ErrorCode.USERNAME_ALREADY_EXISTS
 }
+
+class ProductNotFoundException() : ShopAppException(){
+    override fun errorType() = ErrorCode.PRODUCT_NOT_FOUND
+}
+
+class CategoryNotFoundException() : ShopAppException(){
+    override fun errorType() = ErrorCode.CATEGORY_NOT_FOUND
+
+}
+
+class InsufficientFundsException() : ShopAppException(){
+    override fun errorType() = ErrorCode.INSUFFICIENT_FUNDS_EXCEPTION
+
+}
