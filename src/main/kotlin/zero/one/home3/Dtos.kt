@@ -3,6 +3,9 @@ package zero.one.home3
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 import java.util.Date
+import javax.validation.constraints.NotBlank
+import javax.validation.constraints.NotEmpty
+import javax.validation.constraints.Size
 
 data class BaseMessage(val code: Int? = null, val message: String? = null) {
     companion object {
@@ -24,8 +27,8 @@ data class UserResponse(
 )
 
 data class UpdateUserRequest(
-    val fullname: String?= null,
-    val username: String? = null,
+    @field:Size(min = 4, max = 30) val fullname: String?= null,
+    @field:Size(min = 8, max = 52, ) val username: String? = null,
     val balance: BigDecimal? = null,
 )
 

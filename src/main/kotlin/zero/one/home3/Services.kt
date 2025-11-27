@@ -76,15 +76,15 @@ class UserServiceImpl(
     }
 
     override fun update(id: Long, updateBody: UpdateUserRequest) {
-        val findById = userRepository.findById(id)
-        if (findById.isPresent){
-            val getUser = findById.get()
-            getUser.fullname = updateBody.fullname.toString()
-            getUser.username = updateBody.username.toString()
-            userRepository.save(getUser)
-            return
+        updateBody.run {
+            val user = userRepository.findByIdAndDeletedFalse(id) ?: throw UserNotFoundException()
+            fullname?.let { user.fullname = it }
+            balance?.let { user.balance = it }
+            username?.let { newUsername ->
+                userRepository.existsByUsername(newUsername)
+            }
+
         }
-        throw UserNotFoundException()
     }
 
 }
