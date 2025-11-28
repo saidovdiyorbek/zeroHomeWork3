@@ -69,6 +69,15 @@ class CategoryNotFoundException() : ShopAppException(){
 }
 
 class InsufficientFundsException() : ShopAppException(){
-    override fun errorType() = ErrorCode.INSUFFICIENT_FUNDS_EXCEPTION
+    override fun errorType() = ErrorCode.INSUFFICIENT_FUNDS
+
+}
+
+class TransactionNotFoundException() : ShopAppException(){
+    override fun errorType() = ErrorCode.TRANSACTION_NOT_FOUND
+}
+
+class NotPurchasedException() : ShopAppException(){
+    override fun errorType() = ErrorCode.NOT_PURCHASED
 
 }

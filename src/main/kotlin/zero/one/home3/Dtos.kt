@@ -3,8 +3,6 @@ package zero.one.home3
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 import java.util.Date
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.Size
 
 data class BaseMessage(val code: Int? = null, val message: String? = null) {
@@ -24,6 +22,20 @@ data class UserResponse(
     val username: String,
     val balance: BigDecimal,
     val createdDate: Date?,
+)
+
+data class UserBoughtProductsResponse(
+    val id: Long?,
+    val createdDate: Date?,
+    val lastModifiedDate: Date?,
+    val createdBy: String?,
+    val lastModifiedBy: String?,
+    val deleted: Boolean?,
+    val productId: Long,
+    val productName: String?,
+    val count: Long,
+    val totalAmount: BigDecimal,
+    val transactionId: Long
 )
 
 data class UpdateUserRequest(
@@ -65,5 +77,23 @@ data class CategoryCreateRequest(
     val name: String,
     val order: Long,
     val description: String,
+)
+
+data class TransactionFullInformation(
+    val id: Long?,
+    val createdDate: Date?,
+    val lastModifiedDate: Date?,
+    val createdBy: String?,
+    val lastModifiedBy: String?,
+    val deleted: Boolean?,
+    val userId: Long?,
+    val totalAmount: BigDecimal,
+
+    )
+data class UserPaymentTransactionResponse(
+    val id: Long?,
+    val userId: Long,
+    val createdDate: Date?,
+    val amount: BigDecimal?
 )
 

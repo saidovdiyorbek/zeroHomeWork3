@@ -36,10 +36,15 @@ interface UserService{
     fun delete(id: Long)
     fun getAll(): List<UserResponse>
     fun update(id: Long, updateBody: UpdateUserRequest)
+    fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo>
+    fun getAllPayments(id: Long): List<UserPaymentTransactionResponse>
 }
 @Service
 class UserServiceImpl(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val transactionItemRepository: TransactionItemRepository,
+    private val transactionItemMapper: TransactionItemMapper,
+    private val userPaymentRepository: UserPaymentTransactionRepository
 ) : UserService {
     override fun create(userRequest: UserRequest) {
         if(userRepository.existsByUsername(userRequest.username)){
@@ -87,13 +92,48 @@ class UserServiceImpl(
         }
     }
 
+    override fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo> {
+        val user = userRepository.findById(userId).getOrThrowNotFound(UserNotFoundException())
+        val responseTransactionItems: MutableList<TransactionItemFullInfo> = mutableListOf()
+        val userBoughtProducts = transactionItemRepository.getUserBoughtProducts(user.id)
+
+        userBoughtProducts.run {
+            for (projection in userBoughtProducts) {
+                transactionItemMapper.toTransactionItemFullInfo(projection).run {
+                    responseTransactionItems.add(this)
+                }
+            }
+        }
+        return responseTransactionItems
+
+    }
+
+    override fun getAllPayments(id: Long): List<UserPaymentTransactionResponse> {
+        userRepository.findById(id).getOrThrowNotFound(UserNotFoundException())
+        val userPaymentsByUserId = userPaymentRepository.getUserPaymentsByUserId(id)
+        val response: MutableList<UserPaymentTransactionResponse> = mutableListOf()
+
+        userPaymentsByUserId?.run {
+            for (payments in this) {
+                response.add(UserPaymentTransactionResponse(
+                    payments?.id,
+                    id,
+                    payments?.createdDate,
+                    payments?.amount
+                ))
+            }
+        }
+        return response;
+    }
 }
 //USer service
 
 //Transaction Service
 interface TransactionService{
     fun create(request: TransactionRequest)
-    fun getOne(id: Long): TransactionResponse
+    fun getOne(id: Long): TransactionFullInformation
+    fun getUserAllTransaction(userId: Long): List<TransactionFullInformation>
+    fun deposit(userId: Long, amount: BigDecimal)
 }
 
 @Service
@@ -102,7 +142,8 @@ class TransactionServiceImpl(
     private val repository: TransactionRepository,
     private val productRepository: ProductRepository,
     private val transactionItemRepository: TransactionItemRepository,
-    private val userPaymentRepository: UserPaymentTransactionRepository
+    private val userPaymentRepository: UserPaymentTransactionRepository,
+    private val mapper: TransactionMapper
 ) : TransactionService {
 
     @Transactional
@@ -151,8 +192,30 @@ class TransactionServiceImpl(
         ))
     }
 
-    override fun getOne(id: Long): TransactionResponse {
-        TODO("Not yet implemented")
+    override fun getOne(id: Long): TransactionFullInformation {
+        val findNotDeleted = repository.findByIdAndDeletedFalse(id) ?: throw UserNotFoundException()
+        return mapper.toDto(findNotDeleted)
+    }
+
+    override fun getUserAllTransaction(userId: Long): List<TransactionFullInformation> {
+        val user = userRepository.findByIdAndDeletedFalse(userId) ?: throw UserNotFoundException()
+        val responseTransactions = mutableListOf<TransactionFullInformation>()
+        for (transaction in repository.findByUser(user)) {
+            responseTransactions.add(mapper.toDto(transaction))
+        }
+        return responseTransactions
+    }
+
+    override fun deposit(userId: Long, amount: BigDecimal) {
+        val user = userRepository.findByIdAndDeletedFalse(userId)
+            ?: throw UserNotFoundException()
+        user.run {
+            this.balance += amount
+            userPaymentRepository.save(UserPaymentTransaction(
+                user = user,
+                amount = amount,
+            ))
+        }
     }
 //Transaction Service
 }

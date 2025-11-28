@@ -15,7 +15,6 @@ import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
-import java.util.Optional
 
 @NoRepositoryBean
 interface BaseRepository<T : BaseEntity> : JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
@@ -68,7 +67,7 @@ interface UserRepository : BaseRepository<User>{
 //Transaction repo
 @Repository
 interface TransactionRepository : BaseRepository<Transaction>{
-
+    fun findByUser(user: User): List<Transaction>
 }
 
 @Repository
@@ -95,9 +94,35 @@ interface CategoryRepository : BaseRepository<Category>{
 @Repository
 interface TransactionItemRepository : BaseRepository<TransactionItem>{
 
+    @Query("""
+        select t.id as id,
+        t.createdDate as createdDate,
+        t.lastModifiedDate as lastModifiedDate,
+        t.createdBy as createdBy,
+        t.lastModifiedBy as lastModifiedBy,
+        t.deleted as deleted,
+        t.product.id as productId,
+        p.name as productName,
+        t.count as count,
+        t.totalAmount as totalAmount,
+        t.transaction.id as transactionId
+        from TransactionItem t
+        join Product p on t.product.id = p.id
+        join Transaction tt on t.transaction.id = tt.id
+        where tt.user.id = ?1
+
+""")
+    fun getUserBoughtProducts(userId: Long?): List<TransactionFullInformationProjection>
+
 }
 
 @Repository
 interface UserPaymentTransactionRepository : BaseRepository<UserPaymentTransaction>{
 
+    @Query("""
+        select ut
+        from UserPaymentTransaction ut
+        where ut.user.id = ?1
+    """)
+    fun getUserPaymentsByUserId(userId: Long?): List<UserPaymentTransaction?>?
 }
