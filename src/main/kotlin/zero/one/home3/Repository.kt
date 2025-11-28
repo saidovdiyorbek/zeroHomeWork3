@@ -125,4 +125,21 @@ interface UserPaymentTransactionRepository : BaseRepository<UserPaymentTransacti
         where ut.user.id = ?1
     """)
     fun getUserPaymentsByUserId(userId: Long?): List<UserPaymentTransaction?>?
+
+
+    @Query("""
+        select 
+            u.id as id,
+            u.createdDate as createdDate,
+            u.lastModifiedDate as lastModifiedDate,
+            u.createdBy as createdBy,
+            u.lastModifiedBy as lastModifiedBy,
+            u.deleted as deleted,
+            us.username as username,
+            u.user.id as userId,
+            u.amount as amount
+        from UserPaymentTransaction u
+        join User us on u.user.id = u.id
+    """)
+    fun findByUser(user: User): List<UserPaymentTransactionFullInfoProjection>
 }

@@ -3,6 +3,7 @@ package zero.one.home3
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.util.Date
+import kotlin.Long
 
 @Component
 class ProductMapper(
@@ -15,6 +16,23 @@ class ProductMapper(
                 count = count,
                 category = category,
                 prince
+            )
+        }
+    }
+
+    fun toProductFullInfo(body: Product): ProductFullInfo {
+        body.run {
+            return ProductFullInfo(
+                id,
+                createdDate,
+                lastModifiedDate,
+                createdBy,
+                lastModifiedBy,
+                deleted,
+                name,
+                count,
+                category?.id,
+                price
             )
         }
     }
@@ -42,6 +60,22 @@ class CategoryMapper(){
                 name = name,
                 order = order,
                 description = description,
+            )
+        }
+    }
+
+    fun toCategoryFullInfo(body: Category): CategoryFullInfo {
+        body.run {
+            return CategoryFullInfo(
+                 id,
+             createdDate,
+             lastModifiedDate,
+             createdBy,
+             lastModifiedBy,
+             deleted,
+             name,
+             order,
+             description
             )
         }
     }
@@ -79,6 +113,18 @@ interface TransactionFullInformationProjection{
     fun getTransactionId(): Long?
 }
 
+interface UserPaymentTransactionFullInfoProjection{
+    fun getId(): Long?
+    fun getCreatedDate(): Date?
+    fun getLastModifiedDate(): Date?
+    fun getCreatedBy(): String?
+    fun getLastModifiedBy(): String?
+    fun getDeleted(): Boolean?
+    fun getUsername(): String?
+    fun getUserId(): Long?
+    fun getAmount(): BigDecimal
+}
+
 @Component
 class TransactionItemMapper(){
 
@@ -96,6 +142,25 @@ class TransactionItemMapper(){
                  getCount(),
                  getTotalAmount(),
                  getTransactionId()
+            )
+        }
+    }
+}
+
+@Component
+class UserPaymentTransactionMapper(){
+    fun toUserPaymentTransactionFullInfo(body: UserPaymentTransactionFullInfoProjection): UserPaymentTransactionFullInfo {
+        body.run {
+            return UserPaymentTransactionFullInfo(
+                getId(),
+                getCreatedDate(),
+                getLastModifiedDate(),
+                getCreatedBy(),
+                getLastModifiedBy(),
+                getDeleted(),
+                getUsername(),
+                getUserId(),
+                getAmount(),
             )
         }
     }

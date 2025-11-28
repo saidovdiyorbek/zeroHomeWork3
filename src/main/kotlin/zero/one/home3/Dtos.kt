@@ -73,10 +73,35 @@ data class ProductCreateRequest(
     val prince: BigDecimal
 )
 
+data class ProductUpdateRequest(
+    val name: String?,
+    val count: Long?,
+    val categoryId: Long?,
+    val prince: BigDecimal?,
+)
+
 data class CategoryCreateRequest(
     val name: String,
     val order: Long,
     val description: String,
+)
+
+data class CategoryFullInfo(
+    val id: Long?,
+    val createdDate: Date?,
+    val lastModifiedDate: Date?,
+    val createdBy: String?,
+    val lastModifiedBy: String?,
+    val deleted: Boolean?,
+    val name: String?,
+    val order: Long?,
+    val description: String?
+)
+
+data class CategoryUpdateRequest(
+    val name: String?,
+    val order: Long?,
+    val description: String?
 )
 
 data class TransactionFullInformation(
@@ -96,4 +121,30 @@ data class UserPaymentTransactionResponse(
     val createdDate: Date?,
     val amount: BigDecimal?
 )
+
+data class UserPaymentTransactionFullInfo(
+    val id: Long?,
+    val createdDate: Date?,
+    val lastModifiedDate: Date?,
+    val createdBy: String?,
+    val lastModifiedBy: String?,
+    val deleted: Boolean?,
+    val username: String?,
+    val userId: Long?,
+    val amount: BigDecimal,
+)
+
+data class ProductFullInfo(
+    val id: Long?,
+    val createdDate: Date?,
+    val lastModifiedDate: Date?,
+    val createdBy: String?,
+    val lastModifiedBy: String?,
+    val deleted: Boolean?,
+    val name: String?,
+    val count: Long?,
+    val categoryId: Long?,
+    var price: BigDecimal?,
+)
+
 

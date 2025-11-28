@@ -4,10 +4,15 @@ import getOrThrowNotFound
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import kotlin.plus
 
 //Category service
 interface CategoryService{
     fun create(request: CategoryCreateRequest)
+    fun getAll(): List<CategoryFullInfo>
+    fun getOne(id: Long): CategoryFullInfo
+    fun update(id: Long, updateBody: CategoryUpdateRequest)
+    fun delete(id: Long)
 
 }
 
@@ -26,7 +31,38 @@ class CategoryServiceImpl(
                 }
             }
         }
+
+    override fun getAll(): List<CategoryFullInfo> {
+        val responses: MutableList<CategoryFullInfo> = mutableListOf()
+        repository.findAll().forEach { category ->
+            responses.add(mapper.toCategoryFullInfo(category))
+        }
+        return responses
     }
+
+    override fun getOne(id: Long): CategoryFullInfo {
+        val category = repository.findByIdAndDeletedFalse(id) ?: throw CategoryNotFoundException()
+
+        return category.run {
+            mapper.toCategoryFullInfo(this)
+        }
+    }
+
+    override fun update(id: Long, updateBody: CategoryUpdateRequest) {
+        val category = repository.findByIdAndDeletedFalse(id) ?: throw CategoryNotFoundException()
+
+        repository.save(updateBody.run {
+            this.name?.let { category.name = name }
+            this.order?.let { category.order = order }
+            this.description?.let { category.description = description }
+            category
+        })
+    }
+
+    override fun delete(id: Long) {
+        repository.trash(id) ?: throw CategoryNotFoundException()
+    }
+}
 //Category service
 
 //User service
@@ -36,14 +72,12 @@ interface UserService{
     fun delete(id: Long)
     fun getAll(): List<UserResponse>
     fun update(id: Long, updateBody: UpdateUserRequest)
-    fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo>
     fun getAllPayments(id: Long): List<UserPaymentTransactionResponse>
 }
 @Service
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val transactionItemRepository: TransactionItemRepository,
-    private val transactionItemMapper: TransactionItemMapper,
     private val userPaymentRepository: UserPaymentTransactionRepository
 ) : UserService {
     override fun create(userRequest: UserRequest) {
@@ -92,22 +126,6 @@ class UserServiceImpl(
         }
     }
 
-    override fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo> {
-        val user = userRepository.findById(userId).getOrThrowNotFound(UserNotFoundException())
-        val responseTransactionItems: MutableList<TransactionItemFullInfo> = mutableListOf()
-        val userBoughtProducts = transactionItemRepository.getUserBoughtProducts(user.id)
-
-        userBoughtProducts.run {
-            for (projection in userBoughtProducts) {
-                transactionItemMapper.toTransactionItemFullInfo(projection).run {
-                    responseTransactionItems.add(this)
-                }
-            }
-        }
-        return responseTransactionItems
-
-    }
-
     override fun getAllPayments(id: Long): List<UserPaymentTransactionResponse> {
         userRepository.findById(id).getOrThrowNotFound(UserNotFoundException())
         val userPaymentsByUserId = userPaymentRepository.getUserPaymentsByUserId(id)
@@ -133,7 +151,7 @@ interface TransactionService{
     fun create(request: TransactionRequest)
     fun getOne(id: Long): TransactionFullInformation
     fun getUserAllTransaction(userId: Long): List<TransactionFullInformation>
-    fun deposit(userId: Long, amount: BigDecimal)
+    fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo>
 }
 
 @Service
@@ -143,7 +161,8 @@ class TransactionServiceImpl(
     private val productRepository: ProductRepository,
     private val transactionItemRepository: TransactionItemRepository,
     private val userPaymentRepository: UserPaymentTransactionRepository,
-    private val mapper: TransactionMapper
+    private val mapper: TransactionMapper,
+    private val transactionItemMapper: TransactionItemMapper,
 ) : TransactionService {
 
     @Transactional
@@ -206,23 +225,30 @@ class TransactionServiceImpl(
         return responseTransactions
     }
 
-    override fun deposit(userId: Long, amount: BigDecimal) {
-        val user = userRepository.findByIdAndDeletedFalse(userId)
-            ?: throw UserNotFoundException()
-        user.run {
-            this.balance += amount
-            userPaymentRepository.save(UserPaymentTransaction(
-                user = user,
-                amount = amount,
-            ))
-        }
-    }
-//Transaction Service
-}
+    override fun getUserBoughtProducts(userId: Long): MutableList<TransactionItemFullInfo> {
+        val user = userRepository.findById(userId).getOrThrowNotFound(UserNotFoundException())
+        val responseTransactionItems: MutableList<TransactionItemFullInfo> = mutableListOf()
+        val userBoughtProducts = transactionItemRepository.getUserBoughtProducts(user.id)
 
+        userBoughtProducts.run {
+            for (projection in userBoughtProducts) {
+                transactionItemMapper.toTransactionItemFullInfo(projection).run {
+                    responseTransactionItems.add(this)
+                }
+            }
+        }
+        return responseTransactionItems
+
+    }
+}
+//Transaction Service
 //Product service
 interface ProductService{
     fun create(request: ProductCreateRequest): Any
+    fun getAll(): List<ProductFullInfo>
+    fun getOne(id: Long): ProductFullInfo
+    fun update(id: Long, updateBody: ProductUpdateRequest)
+    fun delete(id: Long)
 }
 @Service
 class ProductServiceImpl(
@@ -239,5 +265,79 @@ class ProductServiceImpl(
         }
     }
 
+    override fun getAll(): List<ProductFullInfo> {
+        val response: MutableList<ProductFullInfo> = mutableListOf()
+        repository.findAll().forEach {product ->
+            mapper.toProductFullInfo(product).run {
+                response.add(this)
+            }
+        }
+        return response
+    }
+
+    override fun getOne(id: Long): ProductFullInfo {
+        val product = repository.findByIdAndDeletedFalse(id) ?: throw ProductNotFoundException()
+
+        return product.run {
+            mapper.toProductFullInfo(product)
+        }
+
+    }
+
+    override fun update(id: Long, updateBody: ProductUpdateRequest) {
+        val product = repository.findByIdAndDeletedFalse(id) ?: throw ProductNotFoundException()
+        updateBody.run {
+            this.categoryId?.let {
+               val category =  categoryRepository.findByIdAndDeletedFalse(this.categoryId) ?: throw CategoryNotFoundException()
+                product.category = category
+            }
+            this.name?.let { product.name = name}
+            this.count?.let { product.count = count}
+            this.prince?.let { product.price = prince}
+        }
+        repository.save(product)
+    }
+
+    override fun delete(id: Long) {
+        repository.trash(id) ?: throw ProductNotFoundException()
+    }
+
 }
 //Product service
+
+//UserPaymentTransaction
+interface UserPaymentTransactionService{
+    fun deposit(userId: Long, amount: BigDecimal)
+    fun depositHistory(userId: Long): MutableList<UserPaymentTransactionFullInfo>
+}
+
+@Service
+class UserPaymentTransactionServiceImpl(
+    private val userRepository: UserRepository,
+    private val repository: UserPaymentTransactionRepository,
+    private val mapper: UserPaymentTransactionMapper,
+): UserPaymentTransactionService{
+
+    override fun deposit(userId: Long, amount: BigDecimal) {
+        val user = userRepository.findByIdAndDeletedFalse(userId)
+            ?: throw UserNotFoundException()
+        user.run {
+            this.balance += amount
+            repository.save(UserPaymentTransaction(
+                user = user,
+                amount = amount,
+            ))
+        }
+    }
+
+    override fun depositHistory(userId: Long): MutableList<UserPaymentTransactionFullInfo> {
+        val user = userRepository.findByIdAndDeletedFalse(userId) ?: throw UserNotFoundException()
+        val responsePayments = mutableListOf<UserPaymentTransactionFullInfo>()
+        for (payment in repository.findByUser(user)) {
+            responsePayments.add(mapper.toUserPaymentTransactionFullInfo(payment))
+        }
+        return responsePayments
+    }
+
+}
+//UserPaymentTransaction
